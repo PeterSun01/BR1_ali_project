@@ -63,7 +63,8 @@
         "pppapi.h": "c",
         "libgsm.h": "c",
         "gnss.h": "c",
-        "minmea.h": "c"
+        "minmea.h": "c",
+        "jdq.h": "c"
     },
     "files.autoGuessEncoding": true,
 

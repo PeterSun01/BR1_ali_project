@@ -12,6 +12,7 @@
 #include "Smartconfig.h"
 #include "E2prom.h"
 #include "sht31.h"
+#include "Jdq.h"
 
 
 
@@ -91,10 +92,15 @@ esp_err_t parse_Uart0(char *json_data)
 {
 	"method": "thing.event.property.post",
 	"params": {
-		"Speed": 12,
-		"Temperature": 24.3,
-		"SerialNumber": "CAR1V001",
-		"Humidity": 34.9
+		"Device_ID": "AA",
+		"Internal_Temperature": 1,
+		"Internal_Humidity": 2,
+		"Pipeline_Temp_Channel1": 3,
+		"Pipeline_Temp_Channel2": 4,
+		"Pipeline_Temp_Channel3": 5,
+		"Jdq_Br_Status": 0,
+		"Jdq_Beep_Status": 0,
+		"Data_Upload_Time": "BB"
 	}
 }
 */
@@ -108,16 +114,24 @@ void create_mqtt_json(creat_json *pCreat_json)
     cJSON_AddItemToObject(root, "method", cJSON_CreateString("thing.event.property.post"));
     cJSON_AddItemToObject(root, "params", params);
 
+    cJSON_AddItemToObject(params, "Device_ID", cJSON_CreateString(DeviceName));
     if (sht31_readTempHum()) 
     {		
         double Temperature = sht31_readTemperature();
         double Humidity = sht31_readHumidity();
 
-        cJSON_AddItemToObject(params, "Temperature", cJSON_CreateNumber(Temperature));
-        cJSON_AddItemToObject(params, "Humidity", cJSON_CreateNumber(Humidity)); 
+        cJSON_AddItemToObject(params, "Internal_Temperature", cJSON_CreateNumber(Temperature));
+        cJSON_AddItemToObject(params, "Internal_Humidity", cJSON_CreateNumber(Humidity)); 
         ESP_LOGI("SHT30", "Temperature=%.1f, Humidity=%.1f", Temperature, Humidity);
 	} 
-    cJSON_AddItemToObject(params, "SerialNumber", cJSON_CreateString(DeviceName));
+
+    cJSON_AddItemToObject(params, "Pipeline_Temp_Channel1", cJSON_CreateNumber(200));
+    cJSON_AddItemToObject(params, "Pipeline_Temp_Channel2", cJSON_CreateNumber(200));
+    cJSON_AddItemToObject(params, "Pipeline_Temp_Channel3", cJSON_CreateNumber(200));
+
+    cJSON_AddItemToObject(params, "Jdq_Br_Status", cJSON_CreateNumber(Jdq_Br_Status));
+    cJSON_AddItemToObject(params, "Jdq_Beep_Status", cJSON_CreateNumber(Jdq_Beep_Status));
+  
 
     char *cjson_printunformat;
     cjson_printunformat=cJSON_PrintUnformatted(root);

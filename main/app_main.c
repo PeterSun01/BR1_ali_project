@@ -17,10 +17,10 @@
 #include "Led.h"
 #include "E2prom.h"
 #include "Jdq.h"
-
 #include "Key.h"
 #include "sht31.h"
 #include "libGSM.h"
+#include "Temp485.h"
 
 
 extern const int PPP_CONNECTED_BIT;
@@ -40,12 +40,10 @@ void timer_periodic_cb(void *arg) //1ms中断一次
 {
   static int64_t timer_count = 0;
   timer_count++;
-  if (timer_count >= 3000) //1s
+  if (timer_count >= 6000) //6s
   {
     timer_count = 0;
     printf("[APP] Free memory: %d bytes\n", esp_get_free_heap_size());
-    //printf("led status=%d\n", Led_Status);
-
   }
 }
 
@@ -123,6 +121,7 @@ void app_main(void)
   i2c_init();
   Uart0_Init();
   key_Init();
+  Temp485_Init();
   xTaskCreate(Uart0_Task, "Uart0_Task", 4096, NULL, 10, NULL);
   read_flash_usr();//读取开机次数
 

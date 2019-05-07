@@ -766,6 +766,7 @@ void GSM_poweron(void)
 int ppposInit()
 {
 	GSM_poweron();
+    
 	ppp_event_group = xEventGroupCreate();
 	if (pppos_mutex != NULL) xSemaphoreTake(pppos_mutex, PPPOSMUTEX_TIMEOUT);
 	do_pppos_connect = 1;

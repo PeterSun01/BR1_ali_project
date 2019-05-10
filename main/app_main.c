@@ -40,7 +40,7 @@ void timer_periodic_cb(void *arg) //1ms中断一次
 {
   static int64_t timer_count = 0;
   timer_count++;
-  if (timer_count >= 6000) //6s
+  if (timer_count >= 2000) //2s
   {
     timer_count = 0;
     printf("[APP] Free memory: %d bytes\n", esp_get_free_heap_size());
@@ -102,9 +102,12 @@ void read_flash_usr(void)
 
 static void Uart0_Task(void* arg)
 {
+    
+    
     while(1)
     {
         Uart0_read();
+
         vTaskDelay(10 / portTICK_RATE_MS);
     }  
 }
@@ -119,9 +122,9 @@ void app_main(void)
   Led_Init();
   Jdq_Init();
   i2c_init();
-  Uart0_Init();
   key_Init();
   Temp485_Init();
+  Uart0_Init();
   xTaskCreate(Uart0_Task, "Uart0_Task", 4096, NULL, 10, NULL);
   read_flash_usr();//读取开机次数
 
@@ -147,11 +150,6 @@ void app_main(void)
     }
   }
 
-  ppposInit(); 
-
-
-  //阻塞等待ppp连接
-  xEventGroupWaitBits(ppp_event_group, PPP_CONNECTED_BIT , false, true, portMAX_DELAY); 
 
 
   /*******************************timer 1s init**********************************************/
@@ -161,6 +159,11 @@ void app_main(void)
   {
     printf("timer periodic create err code:%d\n", err);
   }
+
+  ppposInit(); 
+
+  //阻塞等待ppp连接
+  xEventGroupWaitBits(ppp_event_group, PPP_CONNECTED_BIT , false, true, portMAX_DELAY); 
 
   initialise_mqtt();
 

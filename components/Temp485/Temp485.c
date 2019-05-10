@@ -15,7 +15,7 @@
 
 #define BUF_SIZE    100
 
-char temp485_modbus_send_data[]={0x01,0x04,0x04,0x00,0x00,0x03,0xB1,0x3B};//发送查询温度指令3通道
+const char temp485_modbus_send_data[]={0x01,0x04,0x04,0x00,0x00,0x03,0xB1,0x3B};//发送查询温度指令3通道
 
 
 /*******************************************************************************
@@ -49,23 +49,24 @@ static uint16_t CRC16_ModBus(uint8_t *buf,uint8_t buf_len)
   return ((crc16_val&0x00ff)<<8)|((crc16_val&0xff00)>>8);
 }
 
-int Temp485_Read(float *temp1,float *temp2,float* temp3)
+int Temp485_Read(double *temp1,double *temp2,double* temp3)
 {
     int ret;
+    int len2=0;
     uint8_t data_u2[BUF_SIZE];
     gpio_set_level(RS485RD, 1); //RS485输出模式
     uart_write_bytes(UART_NUM_2, temp485_modbus_send_data, 8);
-    vTaskDelay(35 / portTICK_PERIOD_MS);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
     gpio_set_level(RS485RD, 0); //RS485输入模式
-    int len2 = uart_read_bytes(UART_NUM_2, data_u2, BUF_SIZE, 20 / portTICK_RATE_MS);
+    len2 = uart_read_bytes(UART_NUM_2, data_u2, BUF_SIZE, 20 / portTICK_RATE_MS);
     if(len2!=0)
     {
-        /*printf("UART2 recv:");
+        printf("UART2 recv:");
         for(int i=0;i<len2;i++)
         {
             printf("%x ",data_u2[i]);
         }
-        printf("\r\n");*/
+        printf("\r\n");
 
         //crc_check=CRC16_ModBus(data_u2,5);
         //printf("crc-check=%d\n",crc_check);
@@ -79,29 +80,29 @@ int Temp485_Read(float *temp1,float *temp2,float* temp3)
 
             if((Temp1|0x7fff)==0x7fff)//最高为=0，原码，温度正
             {
-                *temp1=(float)Temp1/10;
+                *temp1=(double)Temp1/10;
             }
-            else//最高为=1，原码，温度正
+            else//最高为=1，补码，温度负
             {
-                *temp1=(float)(Temp1-0xffff-0x1)/10;
+                *temp1=(double)(Temp1-0xffff-0x1)/10;
             }
             
             if((Temp2|0x7fff)==0x7fff)//最高为=0，原码，温度正
             {
-                *temp2=(float)Temp2/10;
+                *temp2=(double)Temp2/10;
             }
-            else//最高为=1，原码，温度正
+            else//最高为=1，补码，温度负
             {
-                *temp2=(float)(Temp2-0xffff-0x1)/10;
+                *temp2=(double)(Temp2-0xffff-0x1)/10;
             }
 
             if((Temp3|0x7fff)==0x7fff)//最高为=0，原码，温度正
             {
-                *temp3=(float)Temp3/10;
+                *temp3=(double)Temp3/10;
             }
-            else//最高为=1，原码，温度正
+            else//最高为=1，补码，温度负
             {
-                *temp3=(float)(Temp3-0xffff-0x1)/10;
+                *temp3=(double)(Temp3-0xffff-0x1)/10;
             }
             ret=1;
         }
@@ -125,7 +126,12 @@ int Temp485_Read(float *temp1,float *temp2,float* temp3)
 
 void Temp485_Init(void)
 {
-    
+    gpio_config_t io_conf;
+    io_conf.intr_type = GPIO_INTR_DISABLE;
+    io_conf.pin_bit_mask = 1 << UART2_RXD;
+    io_conf.mode = GPIO_MODE_INPUT;
+
+    gpio_config(&io_conf);
     /**********************uart init**********************************************/
     uart_config_t uart_config = {
         .baud_rate = 9600,
@@ -135,13 +141,14 @@ void Temp485_Init(void)
         .flow_ctrl = UART_HW_FLOWCTRL_DISABLE
     };
 
-
+    gpio_set_pull_mode(UART2_RXD, 0);
     uart_param_config(UART_NUM_2, &uart_config);
     uart_set_pin(UART_NUM_2, UART2_TXD, UART2_RXD, UART2_RTS, UART2_CTS);
     uart_driver_install(UART_NUM_2, BUF_SIZE * 2, 0, 0, NULL, 0);
+
     
     /******************************gpio init*******************************************/
-    gpio_config_t io_conf;
+    //gpio_config_t io_conf;
     //disable interrupt
     io_conf.intr_type = GPIO_PIN_INTR_DISABLE;
     //set as output mode
@@ -149,11 +156,13 @@ void Temp485_Init(void)
     //bit mask of the pins that you want to set,e.g.GPIO16
     io_conf.pin_bit_mask = (1<<RS485RD);
     //disable pull-down mode
-    io_conf.pull_down_en = 0;
+    io_conf.pull_down_en = 1;
     //disable pull-up mode
-    io_conf.pull_up_en = 1;
+    io_conf.pull_up_en = 0;
     //configure GPIO with the given settings
     gpio_config(&io_conf);
 
-
+    Pipeline_Temp_Channel1=0x7fff;
+    Pipeline_Temp_Channel2=0x7fff;
+    Pipeline_Temp_Channel3=0x7fff;
 }

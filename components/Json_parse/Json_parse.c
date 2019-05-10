@@ -13,7 +13,7 @@
 #include "E2prom.h"
 #include "sht31.h"
 #include "Jdq.h"
-
+#include "Temp485.h"
 
 
 esp_err_t parse_Uart0(char *json_data)
@@ -125,10 +125,14 @@ void create_mqtt_json(creat_json *pCreat_json)
         ESP_LOGI("SHT30", "Temperature=%.1f, Humidity=%.1f", Temperature, Humidity);
 	} 
 
-    cJSON_AddItemToObject(params, "Pipeline_Temp_Channel1", cJSON_CreateNumber(200));
-    cJSON_AddItemToObject(params, "Pipeline_Temp_Channel2", cJSON_CreateNumber(200));
-    cJSON_AddItemToObject(params, "Pipeline_Temp_Channel3", cJSON_CreateNumber(200));
+    if(Temp485_Read(&Pipeline_Temp_Channel1,&Pipeline_Temp_Channel2,&Pipeline_Temp_Channel3))
+    {
+        printf("temp1=%.2f,temp2=%.2f,temp3=%.2f\r\n",Pipeline_Temp_Channel1,Pipeline_Temp_Channel2,Pipeline_Temp_Channel3);
 
+        cJSON_AddItemToObject(params, "Pipeline_Temp_Channel1", cJSON_CreateNumber(Pipeline_Temp_Channel1));
+        cJSON_AddItemToObject(params, "Pipeline_Temp_Channel2", cJSON_CreateNumber(Pipeline_Temp_Channel2));
+        cJSON_AddItemToObject(params, "Pipeline_Temp_Channel3", cJSON_CreateNumber(Pipeline_Temp_Channel3));
+    }
     cJSON_AddItemToObject(params, "Jdq_Br_Status", cJSON_CreateNumber(Jdq_Br_Status));
     cJSON_AddItemToObject(params, "Jdq_Beep_Status", cJSON_CreateNumber(Jdq_Beep_Status));
   

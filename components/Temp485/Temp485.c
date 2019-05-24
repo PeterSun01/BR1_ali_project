@@ -117,7 +117,7 @@ int Temp485_Read(double *temp1,double *temp2,double* temp3)
     }
     else//未接传感器
     {
-        ret=-1;
+        ret=0;
     }
     return ret;
 }
@@ -165,4 +165,8 @@ void Temp485_Init(void)
     Pipeline_Temp_Channel1=0x7fff;
     Pipeline_Temp_Channel2=0x7fff;
     Pipeline_Temp_Channel3=0x7fff;
+
+    Temp485_Read(&Pipeline_Temp_Channel1,&Pipeline_Temp_Channel2,&Pipeline_Temp_Channel3);
+    printf("temp1=%.2f,temp2=%.2f,temp3=%.2f\r\n",Pipeline_Temp_Channel1,Pipeline_Temp_Channel2,Pipeline_Temp_Channel3);
+
 }

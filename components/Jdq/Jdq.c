@@ -4,6 +4,7 @@
 #include "driver/gpio.h"
 
 #include "Jdq.h"
+#include "Led.h"
 
 #define GPIO_Jdq_Br       (GPIO_NUM_27)
 #define GPIO_Jdq_Beep     (GPIO_NUM_26)
@@ -39,12 +40,14 @@ void Jdq_Br_On(void)
 {
     gpio_set_level(GPIO_Jdq_Br, 1);
     Jdq_Br_Status=1;
+    Led_JDQ_On();
 }
 
 void Jdq_Br_Off(void)
 {
     gpio_set_level(GPIO_Jdq_Br, 0);
     Jdq_Br_Status=0;
+    Led_JDQ_Off();
 }
 
 void Jdq_Beep_On(void)

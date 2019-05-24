@@ -37,7 +37,7 @@
 #define GSM_OK_Str "OK"
 #define PPPOSMUTEX_TIMEOUT 1000 / portTICK_RATE_MS
 
-#define PPPOS_CLIENT_STACK_SIZE 1024*3
+#define PPPOS_CLIENT_STACK_SIZE 1024*8
 
 
 // shared variables, use mutex to access them
@@ -182,10 +182,10 @@ static GSM_Cmd cmd_Connect =
 static GSM_Cmd *GSM_Init[] =
 {
 		&cmd_AT,
-		//&cmd_Reset,
+		&cmd_Reset,
 		&cmd_EchoOff,
 		&cmd_RFOn,
-		//&cmd_NoSMSInd,
+		&cmd_NoSMSInd,
 		&cmd_Pin,
 		//&cmd_Reg,
 		

@@ -5,7 +5,7 @@ LED驱动程序
 
 Led_Init(void);
 初始化LED，主要为GPIO初始化
-GPIO_LED_G=22
+GPIO_LED_SYS=22
 
 Led_On(void);
 点亮LED
@@ -22,11 +22,11 @@ Led_Off(void);
 
 
 extern void Led_Init(void);
-extern void Led_R_On(void);
-extern void Led_G_On(void);
+extern void Led_JDQ_On(void);
+extern void Led_SYS_On(void);
 extern void Led_Y_On(void);
-extern void Led_G_Off(void);
-extern void Led_R_Off(void);
+extern void Led_SYS_Off(void);
+extern void Led_JDQ_Off(void);
 
 uint8_t Led_Status;
 

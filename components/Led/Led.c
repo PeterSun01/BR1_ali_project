@@ -5,8 +5,8 @@
 
 #include "Led.h"
 
-#define GPIO_LED_G    18
-#define GPIO_LED_R    5
+#define GPIO_LED_SYS    18
+#define GPIO_LED_JDQ    5
 
 static void Led_Task(void* arg)
 {
@@ -15,47 +15,35 @@ static void Led_Task(void* arg)
         switch(Led_Status)
         {
             case LED_STA_INIT:
-                Led_G_On();
+                Led_SYS_On();
                 vTaskDelay(10 / portTICK_RATE_MS);
                 break;
-            
-            case LED_STA_TOUCH:
-                Led_R_On();
-                vTaskDelay(300 / portTICK_RATE_MS);
-                Led_G_On();
-                vTaskDelay(300 / portTICK_RATE_MS);
-                break;
-            
+                       
             case LED_STA_NOSER:
-                Led_G_On();
+                Led_SYS_On();
                 vTaskDelay(100 / portTICK_RATE_MS);
-                Led_G_Off();
+                Led_SYS_Off();
                 vTaskDelay(100 / portTICK_RATE_MS);
                 break;
             
             case LED_STA_WIFIERR:
-                Led_G_On();
+                Led_SYS_On();
                 vTaskDelay(300 / portTICK_RATE_MS);
-                Led_G_Off();
+                Led_SYS_Off();
                 vTaskDelay(300 / portTICK_RATE_MS);
                 break;
 
             case LED_STA_SENDDATA:
-                Led_G_On();
+                Led_SYS_On();
                 vTaskDelay(200 / portTICK_RATE_MS);
-                Led_G_Off();
+                Led_SYS_Off();
                 Led_Status=LED_STA_SENDDATAOVER;
                 break;
 
             case LED_STA_SENDDATAOVER:
-                Led_G_Off();
+                Led_SYS_Off();
                 vTaskDelay(10 / portTICK_RATE_MS);
                 break;
-
-
-
-
-
         }
         
 
@@ -70,8 +58,8 @@ void Led_Init(void)
     io_conf.intr_type = GPIO_PIN_INTR_DISABLE;
     //set as output mode
     io_conf.mode = GPIO_MODE_OUTPUT;
-    //bit mask of the pins that you want to set,e.g.GPIO16
-    io_conf.pin_bit_mask = (1ULL <<GPIO_LED_G);
+
+    io_conf.pin_bit_mask = (1ULL <<GPIO_LED_SYS);
     //disable pull-down mode
     io_conf.pull_down_en = 0;
     //disable pull-up mode
@@ -79,11 +67,11 @@ void Led_Init(void)
     //configure GPIO with the given settings
     gpio_config(&io_conf);  
 
-    io_conf.pin_bit_mask = (1ULL<<GPIO_LED_R);
+    io_conf.pin_bit_mask = (1ULL<<GPIO_LED_JDQ);
     gpio_config(&io_conf); 
 
-    gpio_set_level(GPIO_LED_R, 0);
-    gpio_set_level(GPIO_LED_G, 0);
+    gpio_set_level(GPIO_LED_JDQ, 0);
+    gpio_set_level(GPIO_LED_SYS, 0);
 
     Led_Status=LED_STA_INIT;
 
@@ -92,31 +80,24 @@ void Led_Init(void)
 }
 
 
-void Led_R_On(void)
+void Led_JDQ_On(void)
 {
-    gpio_set_level(GPIO_LED_R, 0);
-    gpio_set_level(GPIO_LED_G, 1);
+    gpio_set_level(GPIO_LED_JDQ, 0);
 }
 
-void Led_G_On(void)
+void Led_SYS_On(void)
 {
-    gpio_set_level(GPIO_LED_R, 1);
-    gpio_set_level(GPIO_LED_G, 0);
+    gpio_set_level(GPIO_LED_SYS, 0);
 }
 
-void Led_Y_On(void)
+void Led_SYS_Off(void)
 {
-    gpio_set_level(GPIO_LED_R, 0);
-    gpio_set_level(GPIO_LED_G, 0);
-}
-void Led_G_Off(void)
-{
-    gpio_set_level(GPIO_LED_G, 1);
+    gpio_set_level(GPIO_LED_SYS, 1);
 }
 
-void Led_R_Off(void)
+void Led_JDQ_Off(void)
 {
-    gpio_set_level(GPIO_LED_R, 1);
+    gpio_set_level(GPIO_LED_JDQ, 1);
 }
 
 

@@ -65,7 +65,8 @@
         "gnss.h": "c",
         "minmea.h": "c",
         "jdq.h": "c",
-        "temp485.h": "c"
+        "temp485.h": "c",
+        "mqtt.h": "c"
     },
     "files.autoGuessEncoding": true,
 

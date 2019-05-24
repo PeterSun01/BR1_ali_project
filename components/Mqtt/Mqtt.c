@@ -28,6 +28,15 @@
 #include "Led.h"
 #include "libGSM.h"
 #include "hmac_sha1.h"
+#include "sht31.h"
+#include "Temp485.h"
+#include "Jdq.h"
+
+#define Ctl_Max_Temp    33      //控制阈值最高温度
+#define Ctl_Min_Temp    26      //控制阈值最低温度
+
+#define Alarm_Max_Temp    (60)      //报警阈值最高温度
+#define Alarm_Min_Temp    (Ctl_Min_Temp-5)      //报警阈值最低温度
 
 #define MQTT_JSON_TYPE  0X03
 
@@ -110,7 +119,104 @@ void Mqtt_Send_Msg(char* topic)
     free(pCreat_json);
 }
 
+void Jdq_Ctl_App(void)//读取各传感器状态，并控制继电器
+{
+    ErrorStatus=0;
+    bzero(ErrorCode,sizeof(ErrorCode));
+    if(sht31_readTempHum()==0) //箱内温湿度读取错误
+    {
+        Humidity=0x7fff;
+        Temperature=0x7fff;
+        ErrorStatus=1;
+        strcat(ErrorCode,"404;");
+        
+    }
+    if(Temp485_Read(&Pipeline_Temp_Channel1,&Pipeline_Temp_Channel2,&Pipeline_Temp_Channel3)==1) //外接温度传感器有响应
+    {
+        //外接温度传感器全部故障
+        if((Pipeline_Temp_Channel1==0x7fff)&&(Pipeline_Temp_Channel2==0x7fff)&&(Pipeline_Temp_Channel3==0x7fff))
+        {
+            ErrorStatus=1;
+            strcat(ErrorCode,"401;402;403;");
+            Jdq_Br_On();
+            Jdq_Beep_On();
+            //一直开启加热
+            printf("Pipeline_Temp_Channel1-3 0x7fff\r\n");
+        }
+        else//外接传感器没有全部故障
+        {
+            if(Pipeline_Temp_Channel1==0x7fff) //外接1故障
+            {
+                ErrorStatus=1;
+                strcat(ErrorCode,"401;");
+            }
+            if(Pipeline_Temp_Channel2==0x7fff) //外接2故障
+            {
+                ErrorStatus=1;
+                strcat(ErrorCode,"402;");
+            }
+            if(Pipeline_Temp_Channel3==0x7fff) //外接3故障
+            {
+                ErrorStatus=1;
+                strcat(ErrorCode,"403;");
+            }
 
+            //有一个管道温度<阈值最低温度，则开启加热
+            if((Pipeline_Temp_Channel1<Ctl_Min_Temp)||(Pipeline_Temp_Channel2<Ctl_Min_Temp)||(Pipeline_Temp_Channel3<Ctl_Min_Temp))
+            {
+                Jdq_Br_On();
+            }
+            //三个管道温度全部>阈值最高温度，则关闭加热
+            else if((Pipeline_Temp_Channel1>Ctl_Max_Temp)&&(Pipeline_Temp_Channel2>Ctl_Max_Temp)&&(Pipeline_Temp_Channel3>Ctl_Max_Temp))
+            {
+                Jdq_Br_Off();
+            }
+
+            //三个外接温度均小于报警最低温度阈值
+            if((Pipeline_Temp_Channel1<Alarm_Min_Temp)&&(Pipeline_Temp_Channel2<Alarm_Min_Temp)&&(Pipeline_Temp_Channel3<Alarm_Min_Temp))
+            {
+                ErrorStatus=1;
+                strcat(ErrorCode,"412;");
+                Jdq_Br_On();
+                Jdq_Beep_On();
+            }
+
+            //三个外接温度均高于报警最高温度阈值
+            if((Pipeline_Temp_Channel1>Alarm_Max_Temp)&&(Pipeline_Temp_Channel2>Alarm_Max_Temp)&&(Pipeline_Temp_Channel3>Alarm_Max_Temp))
+            {
+                ErrorStatus=1;
+                strcat(ErrorCode,"411;");
+                Jdq_Br_Off();
+                Jdq_Beep_On();
+            }
+
+        }
+    }    
+    else//外接温度传感器全部故障（断连、无响应）
+    {
+        printf("Pipeline_Temp not connect\r\n");
+        Pipeline_Temp_Channel1=0x7fff;
+        Pipeline_Temp_Channel2=0x7fff;
+        Pipeline_Temp_Channel3=0x7fff;
+        ErrorStatus=1;
+        strcat(ErrorCode,"401;402;403;");
+        Jdq_Br_On();
+        Jdq_Beep_On();
+        //一直开启加热
+    }
+
+
+
+    if(strlen(ErrorCode)==0)
+    {
+        strcat(ErrorCode,"200");
+        Jdq_Beep_Off();
+    }
+
+    printf("ErrorCode=%s\r\n",ErrorCode);
+
+
+}
 
 
 static void MqttSend_Task(void* arg)
@@ -119,6 +225,7 @@ static void MqttSend_Task(void* arg)
     {
         xEventGroupWaitBits(ppp_event_group, PPP_CONNECTED_BIT , false, true, portMAX_DELAY); 
         xEventGroupWaitBits(mqtt_event_group, MQTT_CONNECTED_BIT , false, true, portMAX_DELAY); 
+        Jdq_Ctl_App();
         Mqtt_Send_Msg(Topic_Post);
         vTaskDelay(5000 / portTICK_RATE_MS);
     }

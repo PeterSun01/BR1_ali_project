@@ -14,6 +14,7 @@
 #include "sht31.h"
 #include "Jdq.h"
 #include "Temp485.h"
+#include "Mqtt.h"
 
 
 esp_err_t parse_Uart0(char *json_data)
@@ -100,10 +101,18 @@ esp_err_t parse_Uart0(char *json_data)
 		"Pipeline_Temp_Channel3": 5,
 		"Jdq_Br_Status": 0,
 		"Jdq_Beep_Status": 0,
-		"Data_Upload_Time": "BB"
+		"ErrorCode": "401;402",
+ 	    "ErrorStatus": 1,
+         "GeoLocation": {
+			"CoordinateSystem": 1,
+			"Latitude": 39.12,
+			"Longitude": 121.34,
+			"Altitude": 12.5
+		}
 	}
 }
 */
+
 
 void create_mqtt_json(creat_json *pCreat_json)
 {
@@ -115,26 +124,33 @@ void create_mqtt_json(creat_json *pCreat_json)
     cJSON_AddItemToObject(root, "params", params);
 
     cJSON_AddItemToObject(params, "Device_ID", cJSON_CreateString(DeviceName));
-    if (sht31_readTempHum()) 
-    {		
-        double Temperature = sht31_readTemperature();
-        double Humidity = sht31_readHumidity();
 
-        cJSON_AddItemToObject(params, "Internal_Temperature", cJSON_CreateNumber(Temperature));
-        cJSON_AddItemToObject(params, "Internal_Humidity", cJSON_CreateNumber(Humidity)); 
-        ESP_LOGI("SHT30", "Temperature=%.1f, Humidity=%.1f", Temperature, Humidity);
-	} 
+    cJSON_AddItemToObject(params, "Internal_Temperature", cJSON_CreateNumber(Temperature));
+    cJSON_AddItemToObject(params, "Internal_Humidity", cJSON_CreateNumber(Humidity)); 
+    ESP_LOGI("SHT30", "Temperature=%.1f, Humidity=%.1f", Temperature, Humidity);
+	 
 
-    if(Temp485_Read(&Pipeline_Temp_Channel1,&Pipeline_Temp_Channel2,&Pipeline_Temp_Channel3))
-    {
-        printf("temp1=%.2f,temp2=%.2f,temp3=%.2f\r\n",Pipeline_Temp_Channel1,Pipeline_Temp_Channel2,Pipeline_Temp_Channel3);
+    cJSON_AddItemToObject(params, "Pipeline_Temp_Channel1", cJSON_CreateNumber(Pipeline_Temp_Channel1));
+    cJSON_AddItemToObject(params, "Pipeline_Temp_Channel2", cJSON_CreateNumber(Pipeline_Temp_Channel2));
+    cJSON_AddItemToObject(params, "Pipeline_Temp_Channel3", cJSON_CreateNumber(Pipeline_Temp_Channel3));
+    printf("temp1=%.2f,temp2=%.2f,temp3=%.2f\r\n",Pipeline_Temp_Channel1,Pipeline_Temp_Channel2,Pipeline_Temp_Channel3);
 
-        cJSON_AddItemToObject(params, "Pipeline_Temp_Channel1", cJSON_CreateNumber(Pipeline_Temp_Channel1));
-        cJSON_AddItemToObject(params, "Pipeline_Temp_Channel2", cJSON_CreateNumber(Pipeline_Temp_Channel2));
-        cJSON_AddItemToObject(params, "Pipeline_Temp_Channel3", cJSON_CreateNumber(Pipeline_Temp_Channel3));
-    }
     cJSON_AddItemToObject(params, "Jdq_Br_Status", cJSON_CreateNumber(Jdq_Br_Status));
     cJSON_AddItemToObject(params, "Jdq_Beep_Status", cJSON_CreateNumber(Jdq_Beep_Status));
+
+    cJSON_AddItemToObject(params, "ErrorCode", cJSON_CreateString(ErrorCode));
+    cJSON_AddItemToObject(params, "ErrorStatus", cJSON_CreateNumber(ErrorStatus));
+
+    #define LON     121.505386
+    #define LAT     38.840160
+    #define ALT     149.12
+
+    cJSON *GeoLocation = cJSON_CreateObject();
+    cJSON_AddItemToObject(params, "GeoLocation", GeoLocation);
+    cJSON_AddItemToObject(GeoLocation, "CoordinateSystem", cJSON_CreateNumber(1));
+    cJSON_AddItemToObject(GeoLocation, "Latitude", cJSON_CreateNumber(LAT));
+    cJSON_AddItemToObject(GeoLocation, "Longitude", cJSON_CreateNumber(LON));
+    cJSON_AddItemToObject(GeoLocation, "Altitude", cJSON_CreateNumber(ALT));
   
 
     char *cjson_printunformat;

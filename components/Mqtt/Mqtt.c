@@ -133,6 +133,7 @@ void Jdq_Ctl_App(void)//读取各传感器状态，并控制继电器
     }
     if(Temp485_Read(&Pipeline_Temp_Channel1,&Pipeline_Temp_Channel2,&Pipeline_Temp_Channel3)==1) //外接温度传感器有响应
     {
+        read485_errcount=0;
         //外接温度传感器全部故障
         if((Pipeline_Temp_Channel1==0x7fff)&&(Pipeline_Temp_Channel2==0x7fff)&&(Pipeline_Temp_Channel3==0x7fff))
         {
@@ -194,15 +195,20 @@ void Jdq_Ctl_App(void)//读取各传感器状态，并控制继电器
     }    
     else//外接温度传感器全部故障（断连、无响应）
     {
-        printf("Pipeline_Temp not connect\r\n");
-        Pipeline_Temp_Channel1=0x7fff;
-        Pipeline_Temp_Channel2=0x7fff;
-        Pipeline_Temp_Channel3=0x7fff;
-        ErrorStatus=1;
-        strcat(ErrorCode,"401;402;403;");
-        Jdq_Br_On();
-        Jdq_Beep_On();
-        //一直开启加热
+        read485_errcount++;
+        if(read485_errcount>2)
+        {
+            read485_errcount=3;
+            printf("Pipeline_Temp not connect\r\n");
+            Pipeline_Temp_Channel1=0x7fff;
+            Pipeline_Temp_Channel2=0x7fff;
+            Pipeline_Temp_Channel3=0x7fff;
+            ErrorStatus=1;
+            strcat(ErrorCode,"401;402;403;");
+            Jdq_Br_On();
+            Jdq_Beep_On();
+            //一直开启加热
+        }
     }
 
 

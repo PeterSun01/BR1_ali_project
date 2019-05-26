@@ -9,5 +9,6 @@ void Jdq_Ctl_App(void);
 
 char ErrorCode[100];
 bool ErrorStatus;
+uint32_t read485_errcount;
 
 #endif

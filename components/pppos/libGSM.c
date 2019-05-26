@@ -182,7 +182,7 @@ static GSM_Cmd cmd_Connect =
 static GSM_Cmd *GSM_Init[] =
 {
 		&cmd_AT,
-		&cmd_Reset,
+		//&cmd_Reset,
 		&cmd_EchoOff,
 		&cmd_RFOn,
 		&cmd_NoSMSInd,

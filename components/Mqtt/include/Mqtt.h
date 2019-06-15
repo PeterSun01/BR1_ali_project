@@ -5,10 +5,8 @@
 
 extern void initialise_mqtt(void);
 void Mqtt_Send_Msg(char* topic);
-void Jdq_Ctl_App(void);
 
-char ErrorCode[100];
-bool ErrorStatus;
-uint32_t read485_errcount;
+
+
 
 #endif

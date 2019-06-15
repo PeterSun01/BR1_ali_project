@@ -70,8 +70,8 @@ void Led_Init(void)
     io_conf.pin_bit_mask = (1ULL<<GPIO_LED_JDQ);
     gpio_config(&io_conf); 
 
-    gpio_set_level(GPIO_LED_JDQ, 0);
-    gpio_set_level(GPIO_LED_SYS, 0);
+    gpio_set_level(GPIO_LED_JDQ, 1);
+    gpio_set_level(GPIO_LED_SYS, 1);
 
     Led_Status=LED_STA_INIT;
 

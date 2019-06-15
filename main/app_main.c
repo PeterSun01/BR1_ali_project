@@ -40,7 +40,7 @@ void timer_periodic_cb(void *arg) //1ms中断一次
 {
   static int64_t timer_count = 0;
   timer_count++;
-  if (timer_count >= 2000) //2s
+  if (timer_count >= 5000) //5s
   {
     timer_count = 0;
     printf("[APP] Free memory: %d bytes\n", esp_get_free_heap_size());

@@ -16,10 +16,10 @@
 #define RS485RD    (GPIO_NUM_4)
 #define BUF_SIZE    100
 
-#define Ctl_Max_Temp    33      //控制阈值最高温度
-#define Ctl_Min_Temp    26      //控制阈值最低温度
+#define Ctl_Max_Temp    10      //控制阈值最高温度
+#define Ctl_Min_Temp    5      //控制阈值最低温度
 
-#define Alarm_Max_Temp    (60)      //报警阈值最高温度
+#define Alarm_Max_Temp    (Ctl_Max_Temp+5)      //报警阈值最高温度
 #define Alarm_Min_Temp    (Ctl_Min_Temp-5)      //报警阈值最低温度
 
 const char temp485_modbus_send_data[]={0x01,0x04,0x04,0x00,0x00,0x03,0xB1,0x3B};//发送查询温度指令3通道
